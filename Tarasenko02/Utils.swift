@@ -28,7 +28,7 @@ func timeAgo(from date: Date) -> String {
     }
 }
 
-func printRating(rating: Int) -> String {
+func formatRating(rating: Int) -> String {
     let ratingStr = String(rating)
     
     if ratingStr.count <= 4 {
@@ -44,7 +44,7 @@ func printRating(rating: Int) -> String {
     }
 }
 
-func isSaved() -> Bool {
+func isPostSaved() -> Bool {
     let randomNumber = Int.random(in: 0...1)
     return randomNumber != 0
 }
