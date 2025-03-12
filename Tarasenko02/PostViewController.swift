@@ -10,77 +10,35 @@ import SDWebImage
 
 class PostViewController: UIViewController {
 
-    @IBOutlet weak var usernameLabel: UILabel!
-    @IBOutlet weak var bookMarkButton: UIButton!
-    @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var image: UIImageView!
-    @IBOutlet weak var ratingButton: UIButton!
-    @IBOutlet weak var commentsButton: UIButton!
-    @IBOutlet weak var shareButton: UIButton!
+    @IBOutlet private weak var usernameLabel: UILabel!
+    @IBOutlet private weak var bookMarkButton: UIButton!
+    @IBOutlet private weak var titleLabel: UILabel!
+    @IBOutlet private weak var image: UIImageView!
+    @IBOutlet private weak var ratingButton: UIButton!
+    @IBOutlet private weak var commentsButton: UIButton!
+    @IBOutlet private weak var shareButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         Task {
-            let redditPost = try await RedditAPIClient.shared.fetchPosts(subreddit: "ios", limit: 1, after: nil)
-            guard let postData = redditPost.data.children.first else { return }
-            let post = Post(post: postData, saved: isSaved())
+            let redditPosts = try await RedditAPIClient.shared.fetchPosts(subreddit: "ios", limit: 1, after: nil)
+            guard let firstRedditPost = redditPosts.data.children.first else { return }
+            let post = Post(post: firstRedditPost, saved: isSaved())
             
-            usernameLabel.text = "\(postData.data.author) • \(timeAgo(from: Date(timeIntervalSince1970: TimeInterval(postData.data.created_utc)))) • \(postData.data.domain)"
+            usernameLabel.text = "\(post.post.data.author) • \(timeAgo(from: Date(timeIntervalSince1970: TimeInterval(post.post.data.created_utc)))) • \(post.post.data.domain)"
             
-            titleLabel.text = postData.data.title
+            titleLabel.text = post.post.data.title
             
-            let url = postData.data.thumbnail.replacingOccurrences(of: "&amp;", with: "&")
+            let url = post.post.data.thumbnail.replacingOccurrences(of: "&amp;", with: "&")
             image.sd_setImage(with: URL(string: url), placeholderImage: UIImage(named: "white.jpeg"))
             
-            ratingButton.titleLabel?.text = printRating(rating: postData.data.score)
+            ratingButton.setTitle(printRating(rating: post.post.data.score), for: .normal)
             
-            commentsButton.titleLabel?.text = "\(postData.data.num_comments)"
+            commentsButton.setTitle(String(post.post.data.num_comments), for: .normal)
             
             if post.saved {
                 bookMarkButton.setImage(UIImage(systemName: "bookmark.fill"), for: .normal)
             }
         }
-    }
-
-    func timeAgo(from date: Date) -> String {
-        let now = Date()
-        let calendar = Calendar.current
-        
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date, to: now)
-        
-        if let years = components.year, years > 0 {
-            return "\(years) years ago"
-        } else if let months = components.month, months > 0 {
-            return "\(months) month ago"
-        } else if let days = components.day, days > 0 {
-            return "\(days) day ago"
-        } else if let hours = components.hour, hours > 0 {
-            return "\(hours) hr. ago"
-        } else if let minutes = components.minute, minutes > 0 {
-            return "\(minutes) min. ago"
-        } else {
-            return "now"
-        }
-    }
-    
-    func printRating(rating: Int) -> String {
-        let ratingStr = String(rating)
-        
-        if ratingStr.count <= 4 {
-            return ratingStr
-        }
-        
-        if rating < 1_000_000 {
-            let thousands = rating / 1000
-            return "\(thousands)K"
-        } else {
-            let millions = rating / 1_000_000
-            return "\(millions)M"
-        }
-    }
-    
-    func isSaved() -> Bool {
-        let randomNumber = Int.random(in: 0...1)
-        return randomNumber != 0
     }
 }
