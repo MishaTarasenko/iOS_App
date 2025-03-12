@@ -21,22 +21,22 @@ class PostViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         Task {
-            let redditPost = Post(post: try await RedditAPIClient.shared.fetchPosts(subreddit: "ios", limit: 1, after: nil), saved: isSaved())
-            let data = redditPost.post
-            guard let post = data.data.children.first else { return }
+            let redditPost = try await RedditAPIClient.shared.fetchPosts(subreddit: "ios", limit: 1, after: nil)
+            guard let postData = redditPost.data.children.first else { return }
+            let post = Post(post: postData, saved: isSaved())
             
-            usernameLabel.text = "\(post.data.author) • \(timeAgo(from: Date(timeIntervalSince1970: TimeInterval(post.data.created_utc)))) • \(post.data.domain)"
+            usernameLabel.text = "\(postData.data.author) • \(timeAgo(from: Date(timeIntervalSince1970: TimeInterval(postData.data.created_utc)))) • \(postData.data.domain)"
             
-            titleLabel.text = post.data.title
+            titleLabel.text = postData.data.title
             
-            let url = post.data.thumbnail.replacingOccurrences(of: "&amp;", with: "&")
+            let url = postData.data.thumbnail.replacingOccurrences(of: "&amp;", with: "&")
             image.sd_setImage(with: URL(string: url), placeholderImage: UIImage(named: "white.jpeg"))
             
-            ratingButton.titleLabel?.text = printRating(rating: post.data.score)
+            ratingButton.titleLabel?.text = printRating(rating: postData.data.score)
             
-            commentsButton.titleLabel?.text = "\(post.data.num_comments)"
+            commentsButton.titleLabel?.text = "\(postData.data.num_comments)"
             
-            if redditPost.saved {
+            if post.saved {
                 bookMarkButton.setImage(UIImage(systemName: "bookmark.fill"), for: .normal)
             }
         }

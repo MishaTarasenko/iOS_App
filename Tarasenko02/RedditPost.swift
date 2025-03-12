@@ -8,7 +8,7 @@
 import Foundation
 
 struct Post {
-    let post: RedditPost
+    let post: Children
     var saved: Bool = false
 }
 
